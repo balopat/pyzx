@@ -1,0 +1,10 @@
+Metadata-Version: 1.0
+Name: pyzx
+Version: 0.0.0
+Summary: Python library for quantum circuit rewriting and optimisation using the ZX-calculus
+Home-page: https://github.com/Quantomatic/pyzx.git
+Author: Quantomatic
+Author-email: UNKNOWN
+License: UNKNOWN
+Description: UNKNOWN
+Platform: UNKNOWN

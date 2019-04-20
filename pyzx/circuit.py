@@ -135,7 +135,7 @@ class Circuit(object):
             return c
         else:
             raise TypeError("Subroutines are not supported")
-        
+
 
     @staticmethod
     def from_qasm_file(fname):
@@ -282,7 +282,7 @@ class Circuit(object):
                     if g.phase.numerator % 4 == 1:
                         c.add_gate("S", g.target)
                     else: c.add_gate("S", g.target, adjoint=True)
-                elif g.phase.denominator == 4:   
+                elif g.phase.denominator == 4:
                     n = g.phase.numerator % 8
                     if n == 3 or n == 5:
                         c.add_gate("Z", g.target)
@@ -292,7 +292,7 @@ class Circuit(object):
                 else:
                     c.add_gate("ZPhase", g.target, g.phase)
                 if isinstance(g, XPhase):
-                    c.add_gate("HAD", g.target) 
+                    c.add_gate("HAD", g.target)
             else:
                 c.add_gate(g)
         return c
@@ -400,7 +400,7 @@ class Circuit(object):
             return True
         else:
             return False
-                    
+
 
     def add_gate(self, gate, *args, **kwargs):
         """Adds a gate to the circuit. ``gate`` can either be 
@@ -455,7 +455,7 @@ class Circuit(object):
         """Returns the amount of T-gates necessary to implement this circuit."""
         return sum(g.tcount() for g in self.gates)
         #return sum(1 for g in self.gates if isinstance(g, (ZPhase, XPhase, ParityPhase)) and g.phase.denominator >= 4)
-    
+
     def twoqubitcount(self):
         """Returns the amount of 2-qubit gates necessary to implement this circuit."""
         c = self.to_basic_gates()
@@ -486,7 +486,7 @@ class Circuit(object):
         s = """Circuit {} on {} qubits with {} gates.
         {} is the T-count
         {} Cliffords among which 
-        {} 2-qubit gates and {} Hadamard gates.""".format(self.name, self.qubits, total, 
+        {} 2-qubit gates and {} Hadamard gates.""".format(self.name, self.qubits, total,
                 tcount, clifford, twoqubit, hadamard)
         if other > 0:
             s += "\nThere are {} gates of a different type".format(other)
@@ -524,7 +524,7 @@ def parse_quipper_block(lines):
         raise TypeError("File does not start correctly: " + start)
     if start.endswith(','): start = start[:-1]
     inputs = start[8:].split(",")
-    
+
     for i in inputs:
         n, t = i.split(":")
         if t.strip() != "Qbit":
@@ -545,7 +545,7 @@ def parse_quipper_block(lines):
             elif gate[i+4:i+8] == '-i%X':
                 gtype = "XPhase"
             else:
-                raise TypeError("Unsupported expression: " + gate) 
+                raise TypeError("Unsupported expression: " + gate)
             f = gate[gate.find(',')+1: gate.find(']')]
             try:
                 f = float(f)
@@ -553,7 +553,7 @@ def parse_quipper_block(lines):
                 raise TypeError("Unsupported expression: " + gate)
             phase = Fraction(f/math.pi)
             target = gate[gate.rfind('(')+1:gate.rfind(')')]
-            try: 
+            try:
                 target = int(target)
             except ValueError:
                 raise TypeError("Unsupported expression: "+ gate)
@@ -611,7 +611,7 @@ def quipper_center_block(fname):
     text = f.read()
     f.close()
     i = text.find('Subroutine: "C"')
-    if i == -1: 
+    if i == -1:
         i = text.find('Subroutine: "S1"')
         if i == -1: raise Exception("Not a valid format")
         text = text[i:].strip()
@@ -747,22 +747,25 @@ class QASMParser(object):
                 else: g = qasm_gate_table[name](argset[0])
                 gates.append(g)
                 continue
-            if name.startswith("rx") or name.startswith("rz"):
+            if name.startswith("u3"):
+                i = name.find('(')
+                j = name.find(')')
+                if i == -1 or j == -1: raise TypeError(
+                    "Invalid specification {}".format(name))
+                val = name[i + 1:j]
+                t, f, l = [Fraction(self.to_float(name, x)).limit_denominator(100000000) for x in val.split(',')]
+                gates.append(QASMU(argset[0],theta=t, phi=f, l=l))
+                continue
+            if name.startswith("rx") or name.startswith("rz") or name.startswith("ry"):
                 i = name.find('(')
                 j = name.find(')')
                 if i == -1 or j == -1: raise TypeError("Invalid specification {}".format(name))
                 val = name[i+1:j]
-                try:
-                    phase = float(val)/math.pi
-                except ValueError:
-                    if val.find('pi') == -1: raise TypeError("Invalid specification {}".format(name))
-                    val = val.replace('pi', '')
-                    val = val.replace('*','')
-                    try: phase = float(val)
-                    except: raise TypeError("Invalid specification {}".format(name))
+                phase = self.to_float(name, val)
                 phase = Fraction(phase).limit_denominator(100000000)
                 if name.startswith('rx'): g = XPhase(argset[0],phase=phase)
-                else: g = ZPhase(argset[0],phase=phase)
+                elif name.startswith('rz'): g = ZPhase(argset[0],phase=phase)
+                else: g = YPhase(argset[0],phase=phase)
                 gates.append(g)
                 continue
             if name in ("cx","CX","cz"):
@@ -775,6 +778,20 @@ class QASMParser(object):
                 continue
             raise TypeError("Unknown gate name: {}".format(c))
         return gates
+
+    def to_float(self, name, val):
+        try:
+            phase = float(val) / math.pi
+        except ValueError:
+            if val.find('pi') == -1: raise TypeError(
+                "Invalid specification {}".format(name))
+            val = val.replace('pi', '')
+            val = val.replace('*', '')
+            try:
+                phase = float(val)
+            except:
+                raise TypeError("Invalid specification {}".format(name))
+        return phase
 
 
 class InitAncilla:
@@ -870,7 +887,7 @@ class Gate(object):
         args = []
         for a in ["ctrl1","ctrl2", "control", "target"]:
             if hasattr(self, a): args.append("q{:d}".format(getattr(self,a)))
-        
+
         # if hasattr(self, "printphase") and self.printphase:
         #     args.insert(0, phase_to_s(self.phase))
         return "{} {}".format(n, " ".join(args))
@@ -889,7 +906,7 @@ class ZPhase(Gate):
     def __init__(self, target, phase):
         self.target = target
         self.phase = phase
-        self.name 
+        self.name
 
     def to_graph(self, g, labels, qs, rs):
         self.graph_add_node(g,labels, qs,1,self.target,rs[self.target],self.phase)
@@ -952,6 +969,62 @@ class XPhase(Gate):
 
     def tcount(self):
         return 1 if self.phase.denominator > 2 else 0
+
+
+class YPhase(Gate):
+    name = 'YPhase'
+    printphase = True
+    qasm_name = 'ry'
+    qc_name = 'undefined'
+    def __init__(self, target, phase=0):
+        self.target = target
+        self.phase = phase
+
+    def decompose(self):
+        yield ZPhase(self.target, phase = Fraction(-1,2))
+        yield XPhase(self.target, phase = self.phase)
+        yield ZPhase(self.target, phase = Fraction(1, 2))
+
+    def to_graph(self, g, labels, qs, rs):
+        for gate in self.decompose():
+            gate.to_graph(g, labels, qs, rs)
+
+    def to_quipper(self):
+        if not self.printphase:
+            return super().to_quipper()
+        return 'QRot["exp(-i%Y)",{!s}]({!s})'.format(math.pi*self.phase/2,self.target)
+
+    def tcount(self):
+        return 1 if self.phase.denominator > 2 else 0
+
+
+class QASMU(Gate):
+    name = 'QASMU'
+    printphase = True
+    qasm_name = 'u3'
+    qc_name = 'undefined'
+
+    def __init__(self, target, theta=0, phi=0, l=0):
+        self.target = target
+        self.theta = theta
+        self.phi = phi
+        self.l = l
+
+    def decompose(self):
+        yield ZPhase(self.target, phase = self.l)
+        yield YPhase(self.target, phase = self.theta)
+        yield ZPhase(self.target, phase = self.phi)
+
+    def to_graph(self, g, labels, qs, rs):
+       for gate in self.decompose():
+            gate.to_graph(g,labels,qs,rs)
+
+    def tcount(self):
+        return sum([gate.tcount() for gate in self.decompose()])
+
+    def __str__(self):
+        return "QASMU({},{}.{})".format(self.theta, self.phi, self.l)
+
 
 
 class NOT(XPhase):
@@ -1095,7 +1168,7 @@ class Tofolli(Gate):
     def __eq__(self, other):
         if self.index != other.index: return False
         if type(self) != type(other): return False
-        if (self.target == other.target and 
+        if (self.target == other.target and
             ((self.ctrl1 == other.ctrl1 and self.ctrl2 == other.ctrl2) or
              (self.ctrl1 == other.ctrl2 and self.ctrl2 == other.ctrl1))): return True
         return False
@@ -1133,6 +1206,7 @@ class CCZ(Tofolli):
 
 gate_types = {
     "XPhase": XPhase,
+    "YPhase": YPhase,
     "NOT": NOT,
     "ZPhase": ZPhase,
     "Z": Z,
