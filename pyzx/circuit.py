@@ -776,6 +776,10 @@ class QASMParser(object):
                 g = qasm_gate_table[name](ctrl1=argset[0],ctrl2=argset[1],target=argset[2])
                 gates.append(g)
                 continue
+            if name == "swap":
+                g = SWAP(argset[0],argset[1])
+                gates.append(g)
+                continue
             raise TypeError("Unknown gate name: {}".format(c))
         return gates
 
@@ -865,6 +869,10 @@ class Gate(object):
 
     def to_qasm(self):
         n = self.qasm_name
+
+        if n == 'composite':
+            return '\n'.join([g.to_qasm() for g in self.to_basic_gates()])
+
         if n == 'undefined':
             raise TypeError("Gate {} doesn't have a QASM description".format(str(self)))
         if hasattr(self, "adjoint") and self.adjoint:
@@ -970,7 +978,6 @@ class XPhase(Gate):
     def tcount(self):
         return 1 if self.phase.denominator > 2 else 0
 
-
 class YPhase(Gate):
     name = 'YPhase'
     printphase = True
@@ -1001,7 +1008,7 @@ class YPhase(Gate):
 class QASMU(Gate):
     name = 'QASMU'
     printphase = True
-    qasm_name = 'u3'
+    qasm_name = 'composite'
     qc_name = 'undefined'
 
     def __init__(self, target, theta=0, phi=0, l=0):
@@ -1015,6 +1022,9 @@ class QASMU(Gate):
         yield YPhase(self.target, phase = self.theta)
         yield ZPhase(self.target, phase = self.phi)
 
+    def to_basic_gates(self):
+        return self.decompose()
+
     def to_graph(self, g, labels, qs, rs):
        for gate in self.decompose():
             gate.to_graph(g,labels,qs,rs)
@@ -1025,7 +1035,8 @@ class QASMU(Gate):
     def __str__(self):
         return "QASMU({},{}.{})".format(self.theta, self.phi, self.l)
 
-
+    # def to_qasm(self):
+    #     return "U({}, {}, {}) "
 
 class NOT(XPhase):
     name = 'NOT'
@@ -1094,7 +1105,7 @@ class CZ(Gate):
 class ParityPhase(Gate):
     name = 'ParityPhase'
     quippername = 'undefined'
-    qasm_name = 'undefined'
+    qasm_name = 'composite'
     qc_name = 'undefined'
     printphase = True
     def __init__(self, phase, *targets):
@@ -1143,7 +1154,7 @@ class CX(CZ):
 class SWAP(CZ):
     name = 'SWAP'
     quippername = 'undefined'
-    qasm_name = 'undefined'
+    qasm_name = 'composite'
 
     def to_basic_gates(self):
         c1 = CNOT(self.control, self.target)
@@ -1237,6 +1248,7 @@ qasm_gate_table = {
     "cz": CZ,
     "ccx": Tofolli,
     "ccz": CCZ,
+    "swap": SWAP,
 }
 
 QASM_TOFOLLI = """OPENQASM 2.0;
