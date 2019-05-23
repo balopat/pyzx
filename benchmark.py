@@ -87,7 +87,7 @@ def runner(arg):
     return s
 
 if __name__ == '__main__':
-    dirs = [r'circuits\Arithmetic_and_Toffoli', r'circuits\QFT_and_Adders', r'circuits\Other']
+    dirs = ['circuits/Arithmetic_and_Toffoli', 'circuits/QFT_and_Adders', 'circuits/Other']
     beforefiles = []
     afterfiles = []
     tparfiles = []

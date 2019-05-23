@@ -867,8 +867,11 @@ class Gate(object):
         s += ' with nocontrol'
         return s
 
+    def _qasm_name(self):
+        return self.qasm_name
+
     def to_qasm(self):
-        n = self.qasm_name
+        n = self._qasm_name()
 
         if n == 'composite':
             return '\n'.join([g.to_qasm() for g in self.to_basic_gates()])
@@ -959,12 +962,14 @@ class T(ZPhase):
 
 class XPhase(Gate):
     name = 'XPhase'
-    printphase = True
-    qasm_name = 'rx'
+
     qc_name = 'undefined'
     def __init__(self, target, phase=0):
         self.target = target
         self.phase = phase
+        is_x = self.phase == Fraction(1, 1)
+        self.qasm_name = 'x' if is_x else 'rx'
+        self.printphase = not is_x
 
     def to_graph(self, g, labels, qs, rs):
         self.graph_add_node(g,labels, qs,2,self.target,rs[self.target],self.phase)
