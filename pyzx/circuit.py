@@ -19,6 +19,7 @@ import os
 from fractions import Fraction
 import copy
 import math
+import re
 
 from .graph import Graph
 from .drawing import phase_to_s
@@ -700,7 +701,8 @@ class QASMParser(object):
 
     def parse_command(self, c, registers):
         gates = []
-        name, rest = c.split(" ",1)
+        name, rest = [g for g in re.match(r'(^([^\s]+)\s+([^\(\)]+)$)|(^(.*\(.*\))\s+(.*)$)', c).groups() if g is not None][1:]
+
         if name in ("barrier","creg","measure", "id"): return gates
         if name in ("opaque", "if"):
             raise TypeError("Unsupported operation {}".format(c))
@@ -718,7 +720,7 @@ class QASMParser(object):
             if "[" in a:
                 regname, val = a.split("[",1)
                 val = int(val[:-1])
-                if not regname in registers: raise TypeError("Invalid register {}".format(regname))
+                if not regname in registers: raise TypeError("Invalid register {}. Line: \n\t{}".format(regname, c))
                 qubit_values.append([registers[regname][0]+val])
             else:
                 if is_range:
@@ -742,7 +744,7 @@ class QASMParser(object):
                 for g in circ.gates:
                     gates.append(g.reposition(argset))
                 continue
-            if name in ("x", "z", "s", "t", "h", "sdg", "tdg"):
+            if name in ("x", "y", "z", "s", "t", "h", "sdg", "tdg"):
                 if name in ("sdg", "tdg"): g = qasm_gate_table[name](argset[0],adjoint=True)
                 else: g = qasm_gate_table[name](argset[0])
                 gates.append(g)
@@ -755,6 +757,16 @@ class QASMParser(object):
                 val = name[i + 1:j]
                 t, f, l = [Fraction(self.to_float(name, x)).limit_denominator(100000000) for x in val.split(',')]
                 gates.append(QASMU(argset[0],theta=t, phi=f, l=l))
+                continue
+            if name.startswith("u2"):
+                i = name.find('(')
+                j = name.find(')')
+                if i == -1 or j == -1: raise TypeError(
+                    "Invalid specification {}".format(name))
+                val = name[i + 1:j]
+                f, l = [Fraction(self.to_float(name, x)).limit_denominator(
+                    100000000) for x in val.split(',')]
+                gates.append(QASMU(argset[0], theta=Fraction(1,2), phi=f, l=l))
                 continue
             if name.startswith("rx") or name.startswith("rz") or name.startswith("ry"):
                 i = name.find('(')
@@ -987,6 +999,7 @@ class YPhase(Gate):
     name = 'YPhase'
     printphase = True
     qasm_name = 'ry'
+    print()
     qc_name = 'undefined'
     def __init__(self, target, phase=0):
         self.target = target
@@ -1048,6 +1061,15 @@ class NOT(XPhase):
     quippername = 'not'
     qasm_name = 'x'
     qc_name = 'X'
+    printphase = False
+    def __init__(self, target):
+        super().__init__(target, phase = Fraction(1,1))
+
+class Y(YPhase):
+    name = 'Y'
+    quippername = 'y'
+    qasm_name = 'y'
+    qc_name = 'Y'
     printphase = False
     def __init__(self, target):
         super().__init__(target, phase = Fraction(1,1))
@@ -1242,6 +1264,7 @@ gate_types = {
 
 qasm_gate_table = {
     "x": NOT,
+    "y": Y,
     "z": Z,
     "s": S,
     "t": T,
