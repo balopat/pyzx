@@ -1051,7 +1051,7 @@ class QASMU(Gate):
         return sum([gate.tcount() for gate in self.decompose()])
 
     def __str__(self):
-        return "QASMU({},{}.{})".format(self.theta, self.phi, self.l)
+        return "QASMU({},{},{})".format(self.theta, self.phi, self.l)
 
     # def to_qasm(self):
     #     return "U({}, {}, {}) "
