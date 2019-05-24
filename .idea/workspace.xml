@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="d1f26c0e-3d67-4596-aeb6-09eafdd0a887" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pyzx/circuit.py" beforeDir="false" afterPath="$PROJECT_DIR$/pyzx/circuit.py" afterDir="false" />
-    </list>
+    <list default="true" id="d1f26c0e-3d67-4596-aeb6-09eafdd0a887" name="Default Changelist" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -66,7 +63,7 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/pyzx/circuit.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="422">
+            <state relative-caret-position="134">
               <caret line="1053" column="28" selection-start-line="1053" selection-start-column="28" selection-end-line="1053" selection-end-column="28" />
               <folding>
                 <element signature="e#802#811#0" expanded="true" />
@@ -374,7 +371,7 @@
       <workItem from="1558572880521" duration="2651000" />
       <workItem from="1558625369351" duration="4723000" />
       <workItem from="1558701979262" duration="184000" />
-      <workItem from="1558711636696" duration="855000" />
+      <workItem from="1558711636696" duration="1048000" />
     </task>
     <servers />
   </component>
@@ -384,7 +381,7 @@
     </history-entry>
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="69954000" />
+    <option name="totallyTimeSpent" value="70147000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1680" height="1050" extended-state="6" />
@@ -403,7 +400,7 @@
       <window_info anchor="bottom" id="Version Control" order="8" weight="0.32959184" />
       <window_info anchor="bottom" id="Database Changes" order="9" />
       <window_info anchor="bottom" id="Event Log" order="10" side_tool="true" />
-      <window_info active="true" anchor="bottom" id="Terminal" order="11" visible="true" weight="0.2387755" />
+      <window_info active="true" anchor="bottom" id="Terminal" order="11" visible="true" weight="0.56938773" />
       <window_info anchor="bottom" id="Python Console" order="12" weight="0.32941177" />
       <window_info anchor="right" id="Commander" order="0" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
@@ -726,7 +723,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/pyzx/circuit.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="422">
+        <state relative-caret-position="134">
           <caret line="1053" column="28" selection-start-line="1053" selection-start-column="28" selection-end-line="1053" selection-end-column="28" />
           <folding>
             <element signature="e#802#811#0" expanded="true" />
